@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+
+# Editor settings (keep the shared debug config)
+.vscode/*
+!.vscode/launch.json
+
+# Local download output
+Downloads/

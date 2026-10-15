@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>yt-dlp · ממשק</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#12110f;--card:#1c1a17;--line:#2e2b26;--line2:#3a3630;--txt:#ece8df;--mut:#a8a295;--acc:#d4f24a;--ok:#7fd6a4;--err:#ff8d7f;--warn:#f2c46d;--in:#12110f;--mono:"IBM Plex Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 Rubik,"Segoe UI",system-ui,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:40px 24px 72px;display:flex;flex-direction:column;gap:28px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:12px}
+h1{margin:0;font-size:44px;line-height:1;font-weight:700;letter-spacing:-.02em}
+h1 b{font-family:var(--mono);font-weight:500;color:var(--acc)}
+h2{margin:0;font-size:22px;font-weight:500}
+.dir{display:flex;align-items:center;gap:8px;color:var(--mut);font-size:14px}
+.dir code{direction:ltr;font-family:var(--mono);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 10px;color:var(--txt);unicode-bidi:isolate}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:22px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hd{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+input,select{background:var(--in);color:var(--txt);border:1px solid var(--line2);border-radius:10px;padding:0 12px;height:46px;font:inherit;font-size:15px;min-width:0}
+input:disabled,select:disabled{opacity:.4}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#url,#sq{flex:1 1 340px;height:52px;border-radius:12px;padding:0 16px}
+#url{direction:ltr;text-align:left;font-family:var(--mono)}
+button{background:var(--acc);color:#12110f;border:0;border-radius:12px;height:52px;padding:0 28px;font:inherit;font-weight:700;cursor:pointer}
+button:hover:not(:disabled){filter:brightness(1.08)}
+button:disabled{opacity:.4;cursor:default}
+button.ghost{background:transparent;border:1px solid var(--line2);color:var(--txt);font-weight:400;padding:0 20px}
+button.small{height:34px;padding:0 12px;font-size:13px}
+#btnClear,#btnOpen{height:44px;font-size:14px;color:var(--mut);border-color:var(--line);padding:0 16px}
+#btnDl{height:56px;padding:0 44px;font-size:18px}
+#btnFormats,#btnEntries,#plAll,#plNone{height:46px;font-size:14px}
+.preview{display:flex;gap:20px;align-items:center;padding:14px;background:var(--in);border:1px solid var(--line);border-radius:12px}
+.preview img{width:192px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;flex:0 0 auto}
+.pt{font-weight:500;font-size:20px;word-break:break-word}
+.pm{color:var(--mut);font-size:14px}
+.msg{color:var(--err);font-size:14px;white-space:pre-wrap;word-break:break-word}
+.msg:empty{display:none}
+.ok{color:var(--ok)}
+.warn{background:rgba(242,196,109,.08);border:1px solid var(--warn);color:var(--warn);border-radius:12px;padding:12px 16px;font-size:14px}
+.opts{display:flex;flex-wrap:wrap;gap:16px 20px;align-items:flex-end}
+.opts label{display:flex;flex-direction:column;gap:6px;color:var(--mut);font-size:13px;min-width:160px}
+.opts input[type=text],.opts input[type=number]{direction:ltr;text-align:left;font-family:var(--mono)}
+.opts input[type=number]{width:120px}
+.seg{display:flex;flex-wrap:wrap;gap:4px;padding:4px;background:var(--in);border:1px solid var(--line);border-radius:12px}
+.seg button{height:40px;padding:0 20px;border-radius:8px;background:transparent;color:var(--mut);font-weight:500;font-size:15px}
+.seg button.on{background:var(--acc);color:#12110f}
+.seg button:disabled{opacity:.35}
+.opts label.chk{flex-direction:row;align-items:center;gap:10px;min-width:0;height:46px;color:var(--txt);font-size:15px;cursor:pointer}
+.chk input{appearance:none;-webkit-appearance:none;width:44px;height:26px;padding:0;border:0;border-radius:99px;background:var(--line2);position:relative;cursor:pointer;flex:0 0 auto}
+.chk input::after{content:"";position:absolute;top:3px;inset-inline-start:3px;width:20px;height:20px;border-radius:50%;background:var(--mut);transition:inset-inline-start .15s}
+.chk input:checked{background:var(--acc)}
+.chk input:checked::after{inset-inline-start:21px;background:#12110f}
+.chk input:disabled{opacity:.3}
+.go{display:flex;align-items:center;gap:16px;border-top:1px solid var(--line);padding-top:20px;flex-wrap:wrap}
+details.adv{border-top:1px solid var(--line);padding-top:16px}
+details.adv summary{cursor:pointer;color:var(--mut);font-size:15px;list-style-position:inside}
+details.adv summary:hover{color:var(--txt)}
+details.adv .opts{margin-top:18px}
+.pl-box{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:16px}
+.pl-list{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow:auto;background:var(--in);border:1px solid var(--line);border-radius:12px;padding:8px}
+.pl-item{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;font-size:14px;cursor:pointer}
+.pl-item:hover{background:var(--card)}
+.pl-item input{width:18px;height:18px;accent-color:var(--acc);flex:0 0 auto}
+.pl-item small{color:var(--mut)}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.res{display:flex;flex-direction:column;gap:6px;min-width:0}
+.res img,.res-noimg{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:var(--in);border:1px solid var(--line)}
+.rt{font-weight:500;font-size:14px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.rm{color:var(--mut);font-size:12px}
+.res button{margin-top:auto}
+#jobs{display:flex;flex-direction:column;gap:14px}
+.job{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.jt{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.jm{color:var(--mut);font-size:13px;margin-top:2px;font-family:var(--mono)}
+.jact{display:flex;justify-content:flex-end;margin-top:10px}
+.bar{height:6px;background:var(--in);border-radius:99px;overflow:hidden;margin:12px 0 2px}
+.bar>i{display:block;height:100%;width:0;background:var(--acc);transition:width .4s}
+.badge{font-size:13px;padding:2px 12px;border-radius:99px;border:1px solid var(--line2);color:var(--mut);white-space:nowrap}
+.badge.running{color:var(--acc);border-color:var(--acc)}
+.badge.done{color:var(--ok);border-color:var(--ok)}
+.badge.error{color:var(--err);border-color:var(--err)}
+.files{font-size:13px;color:var(--mut);margin-top:8px;word-break:break-all;direction:ltr;text-align:left;font-family:var(--mono)}
+.job .msg{margin-top:8px}
+.empty{color:var(--mut);font-size:14px;padding:8px 0}
+@media (max-width:560px){h1{font-size:34px}.preview{flex-direction:column;align-items:flex-start}.preview img{width:100%}.go{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><b>yt-dlp</b> מוריד</h1>
+    <div class="dir">נשמר אל <code id="outDir"></code></div>
+  </header>
+
+  <div id="ffWarn" class="warn" hidden>ffmpeg לא נמצא. מיזוג, המרת אודיו, הטמעה וחיתוך קטעים לא יעבדו. התקנה: <code dir="ltr">winget install Gyan.FFmpeg</code></div>
+
+  <div class="card">
+    <h2>חיפוש</h2>
+    <div class="row">
+      <input id="sq" type="search" aria-label="מה לחפש" placeholder="מה לחפש ביוטיוב?" autocomplete="off">
+      <button id="btnSearch" type="button">חפש</button>
+    </div>
+    <div class="opts">
+      <label>מספר תוצאות
+        <select id="sn"><option>10</option><option>25</option><option>50</option></select>
+      </label>
+      <label>מיון
+        <select id="ssort">
+          <option value="relevance">רלוונטיות</option>
+          <option value="date">תאריך העלאה (חדש לישן)</option>
+          <option value="views">הכי הרבה צפיות</option>
+        </select>
+      </label>
+      <label>סוג
+        <select id="slive">
+          <option value="any">הכל</option>
+          <option value="live">שידור חי כרגע</option>
+          <option value="normal">סרטונים רגילים</option>
+          <option value="was_live">היו שידור חי</option>
+        </select>
+      </label>
+      <label>משך מינימום (דקות)
+        <input type="number" id="smin" min="0" step="1" dir="ltr">
+      </label>
+      <label>משך מקסימום (דקות)
+        <input type="number" id="smax" min="0" step="1" dir="ltr">
+      </label>
+      <label>ערוץ מכיל
+        <input type="text" id="sup">
+      </label>
+      <label>להחריג מילים בכותרת
+        <input type="text" id="sex" placeholder="מופרדות בפסיק">
+      </label>
+    </div>
+
+    <details class="adv">
+      <summary>סינונים מתקדמים</summary>
+      <div class="opts">
+        <label>תאריך העלאה מ-
+          <input type="date" id="sfrom" dir="ltr">
+        </label>
+        <label>תאריך העלאה עד
+          <input type="date" id="sto" dir="ltr">
+        </label>
+        <label>צפיות מינימום
+          <input type="number" id="sviews" min="0" step="1000" dir="ltr">
+        </label>
+        <label>לייקים מינימום
+          <input type="number" id="slikes" min="0" step="10" dir="ltr">
+        </label>
+        <label>רזולוציה מינימלית
+          <select id="sheight">
+            <option value="0">הכל</option>
+            <option value="480">480p ומעלה</option>
+            <option value="720">720p ומעלה</option>
+            <option value="1080">1080p ומעלה</option>
+            <option value="1440">1440p ומעלה</option>
+            <option value="2160">4K</option>
+          </select>
+        </label>
+        <label>קטגוריה מכילה
+          <input type="text" id="scat" placeholder="למשל Education">
+        </label>
+        <label class="chk"><input type="checkbox" id="ssubs"> יש כתוביות</label>
+        <label class="chk"><input type="checkbox" id="scc"> רישיון Creative Commons</label>
+        <label style="flex: 1 1 100%">מסנן yt-dlp חופשי (תחביר של --match-filter)
+          <input type="text" id="sexpr" dir="ltr" placeholder="למשל: like_count > 1000 & !is_live & duration < 1800">
+        </label>
+      </div>
+    </details>
+    <div class="pm">סינונים לפי תאריך, צפיות, לייקים, סוג, רזולוציה, כתוביות, רישיון וקטגוריה בודקים כל תוצאה לעומק, לכן החיפוש איטי יותר. מיון לפי תאריך או צפיות נעשה על עד 60 התוצאות הראשונות.</div>
+    <div id="sMsg" class="msg"></div>
+    <div id="sCount" class="pm"></div>
+    <div id="sRes" class="res-grid"></div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <input id="url" type="url" aria-label="קישור" placeholder="הדבק קישור: YouTube, פלייליסט, או כל אתר נתמך" autocomplete="off" spellcheck="false">
+      <button id="btnPaste" class="ghost" type="button">הדבק</button>
+      <button id="btnCheck" type="button">בדוק</button>
+    </div>
+    <div id="infoMsg" class="msg"></div>
+
+    <div id="preview" class="preview" hidden>
+      <img id="thumb" alt="" hidden>
+      <div>
+        <div id="pTitle" class="pt"></div>
+        <div id="pMeta" class="pm"></div>
+      </div>
+    </div>
+
+    <div class="opts">
+      <div class="seg" id="modeSeg" role="group" aria-label="סוג הורדה">
+        <button type="button" data-mode="video" class="on">וידאו</button>
+        <button type="button" data-mode="audio">אודיו</button>
+        <button type="button" data-mode="thumb">תמונה ממוזערת</button>
+        <button type="button" data-mode="subs">כתוביות בלבד</button>
+      </div>
+      <label id="qualWrap">איכות
+        <select id="quality"><option value="best">הכי טובה</option></select>
+      </label>
+      <button id="btnFormats" class="ghost" type="button">כל הפורמטים</button>
+      <label id="afWrap" hidden>פורמט אודיו
+        <select id="audioFmt">
+          <option value="mp3">MP3</option>
+          <option value="m4a">M4A</option>
+          <option value="opus">Opus</option>
+          <option value="flac">FLAC</option>
+          <option value="wav">WAV</option>
+          <option value="best">מקורי</option>
+        </select>
+      </label>
+      <label id="aqWrap" hidden>איכות אודיו
+        <select id="audioQ">
+          <option value="192">192 kbps</option>
+          <option value="128">128 kbps</option>
+          <option value="256">256 kbps</option>
+          <option value="320">320 kbps</option>
+          <option value="0">הגבוהה ביותר</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="opts" id="subsRow">
+      <label class="chk"><input type="checkbox" id="subs"> כתוביות</label>
+      <label class="chk"><input type="checkbox" id="autoSubs"> כתוביות אוטומטיות</label>
+      <label class="chk" id="embedSubsWrap"><input type="checkbox" id="embedSubs"> הטמע כתוביות בקובץ</label>
+      <label>שפות כתוביות
+        <input type="text" id="subLangs" value="he,en" list="langList" dir="ltr">
+      </label>
+      <datalist id="langList"></datalist>
+    </div>
+
+    <div class="opts" id="embedRow">
+      <label class="chk"><input type="checkbox" id="embedMeta"> מטא-דאטה בקובץ</label>
+      <label class="chk"><input type="checkbox" id="embedThumb"> תמונה בתוך הקובץ</label>
+      <label class="chk"><input type="checkbox" id="embedChap"> פרקים בקובץ</label>
+    </div>
+
+    <div id="plBox" class="pl-box" hidden>
+      <div class="row">
+        <button id="btnEntries" class="ghost" type="button">טען רשימת פריטים</button>
+        <button id="plAll" class="ghost" type="button" hidden>בחר הכל</button>
+        <button id="plNone" class="ghost" type="button" hidden>נקה בחירה</button>
+        <span id="plCount" class="pm"></span>
+      </div>
+      <div id="plList" class="pl-list"></div>
+    </div>
+
+    <details class="adv">
+      <summary>אפשרויות מתקדמות</summary>
+      <div class="opts">
+        <label>קונטיינר וידאו
+          <select id="container"><option>mp4</option><option>mkv</option><option>webm</option></select>
+        </label>
+        <label>קטעי זמן (למשל 1:00-2:30, 5:00-)
+          <input type="text" id="sections" dir="ltr" placeholder="ריק = הכל">
+        </label>
+        <label>תבנית שם קובץ
+          <input type="text" id="outtmpl" dir="ltr" placeholder="ברירת מחדל: %(title)s [%(id)s].%(ext)s">
+        </label>
+        <label>פורמט כתוביות
+          <select id="subFmt"><option>srt</option><option>vtt</option><option>ass</option><option value="best">המקורי</option></select>
+        </label>
+        <label>SponsorBlock
+          <select id="sbMode"><option value="off">כבוי</option><option value="mark">סמן כפרקים</option><option value="remove">הסר קטעים</option></select>
+        </label>
+        <label>קטגוריות SponsorBlock
+          <input type="text" id="sbCats" dir="ltr">
+        </label>
+        <label class="chk"><input type="checkbox" id="writeThumb"> שמור תמונה ממוזערת כקובץ</label>
+        <label class="chk"><input type="checkbox" id="writeJson"> שמור מטא-דאטה כ-JSON</label>
+        <label class="chk"><input type="checkbox" id="writeDesc"> שמור תיאור כקובץ</label>
+        <label>מגבלת מהירות
+          <input type="text" id="rate" dir="ltr" placeholder="למשל 2M">
+        </label>
+        <label>ניסיונות חוזרים
+          <input type="number" id="retries" min="0" max="50" value="10" dir="ltr">
+        </label>
+        <label>פרוקסי
+          <input type="text" id="proxy" dir="ltr" placeholder="http://… או socks5://…">
+        </label>
+        <label>עוגיות מדפדפן
+          <select id="cbrowser"><option value="">ללא</option></select>
+        </label>
+        <label>קובץ עוגיות
+          <input type="text" id="cfile" dir="ltr" placeholder="נתיב ל-cookies.txt">
+        </label>
+        <label style="flex: 1 1 100%">מסנן yt-dlp לפני הורדה (אופציונלי)
+          <input type="text" id="mfilter" dir="ltr" placeholder="למשל: !is_live & duration < 1800">
+        </label>
+      </div>
+    </details>
+
+    <div class="go">
+      <button id="btnDl" type="button" disabled>הורד</button>
+      <span id="dlMsg" class="pm"></span>
+    </div>
+  </div>
+
+  <section>
+    <div class="hd" style="margin-bottom:14px">
+      <h2>הורדות</h2>
+      <div class="row">
+        <button id="btnOpen" class="ghost" type="button">פתח תיקייה</button>
+        <button id="btnClear" class="ghost" type="button">נקה שהסתיימו</button>
+      </div>
+    </div>
+    <div id="jobs"><div class="empty">אין הורדות עדיין</div></div>
+  </section>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const S = { mode: 'video', info: null, url: '', ff: true, entries: [], picked: new Set(), results: [] };
+const ST = { queued: 'בתור', running: 'מוריד', done: 'הושלם', error: 'שגיאה', cancelled: 'בוטל' };
+const MODES = { video: 'וידאו', audio: 'אודיו', thumb: 'תמונה ממוזערת', subs: 'כתוביות' };
+// פקדים שדורשים ffmpeg: כשהוא חסר הם מושבתים
+const FF_ONLY = ['embedSubs', 'embedMeta', 'embedThumb', 'embedChap', 'sections', 'sbMode', 'sbCats', 'container'];
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function fmtDur(sec) {
+  const s = Math.round(sec || 0), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+  const p = n => String(n).padStart(2, '0');
+  return h ? `${h}:${p(m)}:${p(x)}` : `${m}:${p(x)}`;
+}
+
+function fmtBytes(b) {
+  const u = ['B', 'KB', 'MB', 'GB']; let i = 0;
+  while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+  return b.toFixed(i ? 1 : 0) + ' ' + u[i];
+}
+
+async function api(path, body) {
+  const opt = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+  const r = await fetch(path, opt);
+  const j = await r.json().catch(() => ({ error: 'תגובה לא תקינה מהשרת' }));
+  if (!r.ok) throw new Error(j.error || 'שגיאה');
+  return j;
+}
+
+function busy(id, on, text) { const b = $(id); b.disabled = on; b.textContent = text; }
+
+// ---------- מצב הורדה: מה מוצג לכל סוג ----------
+
+function applyMode() {
+  const m = S.mode, media = m === 'video' || m === 'audio';
+  $('qualWrap').hidden = m !== 'video';
+  $('btnFormats').hidden = !media;
+  $('afWrap').hidden = m !== 'audio';
+  $('aqWrap').hidden = m !== 'audio';
+  $('embedRow').hidden = !media;
+  $('subsRow').hidden = m === 'thumb';
+  $('embedSubsWrap').hidden = !media;
+}
+
+document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => {
+  if (b.disabled) return;
+  S.mode = b.dataset.mode;
+  document.querySelectorAll('#modeSeg button').forEach(x => x.classList.toggle('on', x === b));
+  applyMode();
+});
+
+// ---------- קישור ו-בדיקה ----------
+
+$('url').addEventListener('input', () => {
+  S.info = null; S.entries = []; S.picked = new Set();
+  $('btnDl').disabled = true; $('preview').hidden = true; $('infoMsg').textContent = '';
+  $('plBox').hidden = true;
+});
+$('url').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+$('btnCheck').onclick = check;
+$('btnPaste').onclick = async () => {
+  try { $('url').value = (await navigator.clipboard.readText()).trim(); check(); }
+  catch { $('infoMsg').textContent = 'אין גישה ללוח, הדבק ידנית (Ctrl+V)'; }
+};
+
+function showInfo(i) {
+  $('preview').hidden = false;
+  const th = $('thumb');
+  th.hidden = !i.thumbnail; th.src = i.thumbnail || '';
+  $('pTitle').textContent = i.title || '';
+  const meta = [];
+  if (i.uploader) meta.push(i.uploader);
+  if (i.is_playlist) meta.push(`פלייליסט · ${i.count} פריטים`);
+  else if (i.duration) meta.push(fmtDur(i.duration));
+  $('pMeta').textContent = meta.join(' · ');
+  const q = $('quality');
+  q.innerHTML = '<option value="best">הכי טובה</option>' +
+    (i.heights || []).map(h => `<option value="${h}">${h}p</option>`).join('');
+  q.value = 'best';
+  $('plBox').hidden = !i.is_playlist;
+  renderEntries();
+  const langs = [...new Set([...(i.sub_langs || []), ...(i.auto_langs || [])])];
+  $('langList').innerHTML = langs.map(l => `<option value="${esc(l)}">`).join('');
+}
+
+async function check() {
+  const url = $('url').value.trim();
+  if (!url) return;
+  $('infoMsg').textContent = ''; $('dlMsg').textContent = '';
+  S.info = null; S.url = ''; $('btnDl').disabled = true;
+  busy('btnCheck', true, 'בודק…');
+  try {
+    const info = await api('/api/info', { url });
+    S.info = info; S.url = url;
+    showInfo(info);
+    $('btnDl').disabled = false;
+  } catch (e) {
+    $('infoMsg').textContent = e.message;
+    $('preview').hidden = true;
+  } finally {
+    busy('btnCheck', false, 'בדוק');
+  }
+}
+
+// ---------- כל הפורמטים ----------
+
+$('btnFormats').onclick = async () => {
+  if (!S.url) return;
+  busy('btnFormats', true, 'טוען…');
+  try {
+    const list = await api('/api/formats', { url: S.url });
+    const q = $('quality');
+    q.innerHTML = '<option value="best">הכי טובה</option>' + list.map(f => {
+      const parts = [f.res, f.ext, f.vcodec, f.acodec, f.size ? fmtBytes(f.size) : '', f.note].filter(Boolean);
+      return `<option value="fmt:${esc(f.id)}" data-kind="${esc(f.kind)}">${esc(f.id)} · ${esc(parts.join(' · '))}</option>`;
+    }).join('');
+    q.value = 'best';
+    $('infoMsg').textContent = '';
+  } catch (e) {
+    $('infoMsg').textContent = e.message;
+  } finally {
+    busy('btnFormats', false, 'כל הפורמטים');
+  }
+};
+
+// ---------- פלייליסט: בחירת פריטים ----------
+
+function toRanges(nums) {
+  const out = []; let i = 0;
+  while (i < nums.length) {
+    let j = i;
+    while (j + 1 < nums.length && nums[j + 1] === nums[j] + 1) j++;
+    out.push(j > i ? `${nums[i]}-${nums[j]}` : `${nums[i]}`);
+    i = j + 1;
+  }
+  return out.join(',');
+}
+
+function playlistSpec() {
+  if (!S.entries.length || S.picked.size === S.entries.length) return '';
+  return toRanges([...S.picked].sort((a, b) => a - b));
+}
+
+function renderEntries() {
+  $('plList').innerHTML = S.entries.map(x =>
+    `<label class="pl-item"><input type="checkbox" data-i="${x.index}" ${S.picked.has(x.index) ? 'checked' : ''}>` +
+    `<span>${x.index}. ${esc(x.title)}${x.duration ? ` <small>(${fmtDur(x.duration)})</small>` : ''}</span></label>`).join('');
+  $('plAll').hidden = $('plNone').hidden = !S.entries.length;
+  $('plCount').textContent = S.entries.length
+    ? `נבחרו ${S.picked.size} מתוך ${S.entries.length}`
+    : '';
+}
+
+$('btnEntries').onclick = async () => {
+  if (!S.url) return;
+  busy('btnEntries', true, 'טוען…');
+  try {
+    const r = await api('/api/entries', { url: S.url });
+    S.entries = r.items;
+    S.picked = new Set(r.items.map(x => x.index));
+    renderEntries();
+  } catch (e) {
+    $('infoMsg').textContent = e.message;
+  } finally {
+    busy('btnEntries', false, 'טען רשימת פריטים');
+  }
+};
+
+$('plList').onchange = e => {
+  const i = Number(e.target.dataset.i);
+  if (e.target.checked) S.picked.add(i); else S.picked.delete(i);
+  renderEntries();
+};
+$('plAll').onclick = () => { S.picked = new Set(S.entries.map(x => x.index)); renderEntries(); };
+$('plNone').onclick = () => { S.picked = new Set(); renderEntries(); };
+
+// ---------- הורדה ----------
+
+function payload() {
+  const p = {
+    url: S.url,
+    title: S.info?.title || '',
+    mode: S.mode,
+    audio_format: $('audioFmt').value,
+    audio_quality: $('audioQ').value,
+    container: $('container').value,
+    subs: $('subs').checked,
+    auto_subs: $('autoSubs').checked,
+    embed_subs: $('embedSubs').checked,
+    sub_langs: $('subLangs').value,
+    sub_format: $('subFmt').value,
+    embed_metadata: $('embedMeta').checked,
+    embed_thumbnail: $('embedThumb').checked,
+    embed_chapters: $('embedChap').checked,
+    write_thumbnail: $('writeThumb').checked,
+    write_info_json: $('writeJson').checked,
+    write_description: $('writeDesc').checked,
+    sponsorblock: $('sbMode').value,
+    sb_categories: $('sbCats').value,
+    sections: $('sections').value,
+    outtmpl: $('outtmpl').value,
+    limit_rate: $('rate').value,
+    retries: $('retries').value,
+    proxy: $('proxy').value,
+    cookies_browser: $('cbrowser').value,
+    cookie_file: $('cfile').value,
+    playlist: !!S.info?.is_playlist,
+    playlist_items: S.info?.is_playlist ? playlistSpec() : '',
+    match_filter: $('mfilter').value,
+  };
+  // בחירה מתוך כל הפורמטים חלה רק על וידאו
+  const q = $('quality').value;
+  if (S.mode === 'video' && q.startsWith('fmt:')) {
+    p.format_id = q.slice(4);
+    p.format_kind = $('quality').selectedOptions[0].dataset.kind;
+  } else {
+    p.quality = S.mode === 'video' ? q : 'best';
+  }
+  return p;
+}
+
+$('btnDl').onclick = async () => {
+  if (!S.info) return;
+  if (S.info.is_playlist && S.entries.length && !S.picked.size) {
+    $('dlMsg').className = 'msg'; $('dlMsg').textContent = 'בחר לפחות פריט אחד מהפלייליסט';
+    return;
+  }
+  busy('btnDl', true, 'שולח…');
+  try {
+    await api('/api/download', payload());
+    $('dlMsg').className = 'pm ok'; $('dlMsg').textContent = 'נוסף לתור ✓';
+    refresh();
+  } catch (e) {
+    $('dlMsg').className = 'msg'; $('dlMsg').textContent = e.message;
+  } finally {
+    busy('btnDl', false, 'הורד');
+    $('btnDl').disabled = !S.info;
+  }
+};
+
+// ---------- חיפוש מתקדם ----------
+
+async function search() {
+  const q = $('sq').value.trim();
+  if (!q) return;
+  $('sMsg').textContent = ''; $('sCount').textContent = '';
+  busy('btnSearch', true, 'מחפש…');
+  try {
+    S.results = await api('/api/search', {
+      q,
+      n: $('sn').value,
+      sort: $('ssort').value,
+      live: $('slive').value,
+      min_dur: $('smin').value,
+      max_dur: $('smax').value,
+      uploader: $('sup').value,
+      exclude: $('sex').value,
+      date_from: $('sfrom').value,
+      date_to: $('sto').value,
+      min_views: $('sviews').value,
+      min_likes: $('slikes').value,
+      min_height: $('sheight').value,
+      category: $('scat').value,
+      need_subs: $('ssubs').checked,
+      need_cc: $('scc').checked,
+      expr: $('sexpr').value,
+    });
+    renderResults();
+  } catch (e) {
+    S.results = [];
+    $('sRes').innerHTML = '';
+    $('sMsg').textContent = e.message;
+  } finally {
+    busy('btnSearch', false, 'חפש');
+  }
+}
+
+function renderResults() {
+  $('sCount').textContent = S.results.length ? `${S.results.length} תוצאות` : '';
+  $('sRes').innerHTML = S.results.length
+    ? S.results.map((r, i) => `
+      <div class="res">
+        ${r.thumbnail ? `<img src="${esc(r.thumbnail)}" alt="" loading="lazy">` : '<div class="res-noimg"></div>'}
+        <div class="rt" title="${esc(r.title)}">${esc(r.title)}</div>
+        <div class="rm">${esc(r.uploader)}${r.duration ? ' · ' + fmtDur(r.duration) : ''}</div>
+        <button type="button" class="ghost small" data-i="${i}">בחר</button>
+      </div>`).join('')
+    : '<div class="empty">לא נמצאו תוצאות</div>';
+}
+
+$('btnSearch').onclick = search;
+$('sq').addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
+$('sRes').onclick = e => {
+  const b = e.target.closest('button[data-i]');
+  if (!b) return;
+  $('url').value = S.results[Number(b.dataset.i)].url;
+  check();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// ---------- תור ההורדות ----------
+
+const ACTIVE = s => s === 'queued' || s === 'running';
+let lastJobs = '';
+
+function renderJobs(list) {
+  const key = JSON.stringify(list);
+  if (key === lastJobs) return;
+  lastJobs = key;
+  if (!list.length) { $('jobs').innerHTML = '<div class="empty">אין הורדות עדיין</div>'; return; }
+  $('jobs').innerHTML = list.map(j => {
+    const active = ACTIVE(j.status);
+    const pct = j.status === 'done' ? 100 : (j.progress || 0);
+    const label = (j.status === 'running' && j.stage === 'converting') ? 'ממיר…' : (ST[j.status] || j.status);
+    const det = [MODES[j.mode] || j.mode];
+    if (j.playlist) det.push('פלייליסט');
+    if (j.status === 'running' && j.stage === 'downloading') {
+      det.push(pct.toFixed(1) + '%');
+      if (j.speed) det.push(fmtBytes(j.speed) + '/s');
+      if (j.eta != null) det.push('נותרו ' + fmtDur(j.eta));
+    }
+    const files = j.files || [];
+    const fl = files.length
+      ? `<div class="files">${files.slice(0, 5).map(esc).join('<br>')}${files.length > 5 ? `<br>ועוד ${files.length - 5}…` : ''}</div>`
+      : '';
+    const er = j.error ? `<div class="msg">${esc(j.error)}</div>` : '';
+    const act = active
+      ? `<button class="ghost small" type="button" data-act="cancel" data-id="${esc(j.id)}">בטל</button>`
+      : `<button class="ghost small" type="button" data-act="remove" data-id="${esc(j.id)}">הסר</button>`;
+    return `<div class="job">
+      <div class="row" style="justify-content:space-between;flex-wrap:nowrap;gap:12px">
+        <div class="jt" title="${esc(j.url)}">${esc(j.title)}</div>
+        <span class="badge ${j.status}">${label}</span>
+      </div>
+      <div class="jm">${det.join(' · ')}</div>
+      ${active ? `<div class="bar"><i style="width:${pct}%"></i></div>` : ''}
+      ${fl}${er}
+      <div class="jact">${act}</div>
+    </div>`;
+  }).join('');
+}
+
+$('jobs').onclick = async e => {
+  const b = e.target.closest('button[data-act]');
+  if (!b) return;
+  const path = b.dataset.act === 'cancel' ? '/api/jobs/cancel' : '/api/jobs/remove';
+  try { await api(path, { id: b.dataset.id }); }
+  catch (err) { $('dlMsg').className = 'msg'; $('dlMsg').textContent = err.message; }
+  refresh();
+};
+
+async function refresh() {
+  try { renderJobs(await api('/api/jobs')); } catch (e) { /* השרת לא זמין כרגע */ }
+}
+
+$('btnClear').onclick = async () => { await api('/api/jobs/clear', {}); refresh(); };
+$('btnOpen').onclick = async () => {
+  try { await api('/api/open', {}); }
+  catch (e) { $('dlMsg').className = 'msg'; $('dlMsg').textContent = e.message; }
+};
+
+// ---------- אתחול ----------
+
+api('/api/config').then(c => {
+  $('outDir').textContent = c.out_dir;
+  S.ff = c.ffmpeg;
+  $('ffWarn').hidden = c.ffmpeg;
+  if (!c.ffmpeg) {
+    for (const id of FF_ONLY) { const el = $(id); if (el) el.disabled = true; }
+    document.querySelector('#modeSeg [data-mode="audio"]').disabled = true;
+  }
+  $('cbrowser').insertAdjacentHTML('beforeend', c.browsers.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join(''));
+  $('sbCats').value = c.sb_default.join(',');
+}).catch(() => {});
+
+applyMode();
+refresh();
+setInterval(refresh, 1000);
+</script>
+</body>
+</html>
